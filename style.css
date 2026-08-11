@@ -1,0 +1,581 @@
+/* plugins/metadata/youtube_playlist/style.css */
+
+.yt-container {
+    width: 100%;
+    min-height: 100%;
+    background-color: var(--app-bg-main, #0f172a);
+    color: var(--app-text-primary, #f8fafc);
+    padding: 1.5rem;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Header */
+.yt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--app-border, rgba(255, 255, 255, 0.1));
+    margin-bottom: 1.5rem;
+}
+
+.yt-brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.yt-icon-wrapper {
+    width: 44px;
+    height: 44px;
+    background: #ff0000;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 1.6rem;
+    box-shadow: 0 4px 14px rgba(255, 0, 0, 0.4);
+}
+
+.yt-title {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--app-text-primary, #ffffff);
+}
+
+.yt-subtitle {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.85rem;
+    color: var(--app-text-muted, #94a3b8);
+}
+
+.yt-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.yt-search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.yt-search-box i {
+    position: absolute;
+    left: 0.75rem;
+    color: var(--app-text-muted, #94a3b8);
+    font-size: 0.9rem;
+}
+
+.yt-search-box input {
+    background-color: var(--app-input-bg, var(--app-bg-card, #1e293b));
+    border: 1px solid var(--app-border, rgba(255, 255, 255, 0.15));
+    border-radius: 8px;
+    padding: 0.55rem 0.75rem 0.55rem 2.25rem;
+    color: var(--app-text-primary, #ffffff);
+    font-size: 0.9rem;
+    width: 240px;
+    transition: all 0.2s ease;
+}
+
+.yt-search-box input:focus {
+    outline: none;
+    border-color: var(--app-accent, #a855f7);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+    width: 280px;
+}
+
+/* Buttons */
+.yt-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.yt-btn-primary {
+    background-color: var(--app-accent, #a855f7);
+    color: #ffffff;
+}
+
+.yt-btn-primary:hover {
+    background-color: var(--app-accent-hover, #9333ea);
+    transform: translateY(-1px);
+}
+
+.yt-btn-secondary {
+    background-color: var(--app-bg-card, #1e293b);
+    color: var(--app-text-primary, #ffffff);
+    border: 1px solid var(--app-border, rgba(255, 255, 255, 0.15));
+}
+
+.yt-btn-secondary:hover {
+    background-color: var(--app-bg-card-hover, #334155);
+}
+
+.yt-spin-icon i {
+    animation: ytSpin 0.8s linear infinite;
+}
+
+/* Breadcrumb */
+.yt-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.yt-breadcrumb-btn {
+    background: none;
+    border: none;
+    color: var(--app-accent, #a855f7);
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0;
+}
+
+.yt-breadcrumb-btn:hover {
+    text-decoration: underline;
+}
+
+.yt-breadcrumb-sep {
+    color: var(--app-text-muted, #64748b);
+}
+
+.yt-breadcrumb-current {
+    color: var(--app-text-primary, #ffffff);
+    font-weight: 600;
+}
+
+/* State Box (Loading / Empty) */
+.yt-state-box {
+    text-align: center;
+    padding: 4rem 2rem;
+    background-color: var(--app-bg-card, #1e293b);
+    border-radius: 12px;
+    border: 1px solid var(--app-border, rgba(255, 255, 255, 0.1));
+    margin: 2rem 0;
+}
+
+.yt-empty-icon {
+    font-size: 3.5rem;
+    color: #ff0000;
+    margin-bottom: 1rem;
+    opacity: 0.85;
+}
+
+.yt-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--app-border, rgba(255, 255, 255, 0.1));
+    border-top-color: var(--app-accent, #a855f7);
+    border-radius: 50%;
+    animation: ytSpin 1s linear infinite;
+    margin: 0 auto 1rem auto;
+}
+
+@keyframes ytSpin {
+    to { transform: rotate(360deg); }
+}
+
+/* Section Header */
+.yt-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.yt-section-title {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--app-text-primary, #ffffff);
+}
+
+.yt-badge {
+    background-color: var(--app-bg-card, #1e293b);
+    color: var(--app-accent, #a855f7);
+    border: 1px solid var(--app-accent, #a855f7);
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+/* Series Banner */
+.yt-series-banner {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background-color: var(--app-bg-card, #1e293b);
+    border: 1px solid var(--app-border, rgba(255, 255, 255, 0.1));
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.yt-banner-cover {
+    width: 140px;
+    height: 80px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.yt-banner-title {
+    margin: 0 0 0.35rem 0;
+    font-size: 1.3rem;
+    color: var(--app-text-primary, #ffffff);
+}
+
+.yt-banner-meta {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--app-text-muted, #94a3b8);
+}
+
+/* Sticky Top Inline Player (Mobile Widescreen Hero & Sticky Bar) */
+.yt-inline-player-box {
+    background-color: var(--app-bg-card, #1e293b);
+    border: 1px solid var(--app-border, rgba(255, 255, 255, 0.15));
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 768px) {
+    .yt-inline-player-box {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        margin-left: -1rem;
+        margin-right: -1rem;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+}
+
+.yt-inline-player-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0.85rem;
+    background: rgba(15, 23, 42, 0.6);
+    border-bottom: 1px solid var(--app-border, rgba(255, 255, 255, 0.1));
+}
+
+.yt-inline-title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow: hidden;
+}
+
+.yt-inline-badge {
+    font-size: 0.7rem;
+    background: rgba(168, 85, 247, 0.2);
+    color: var(--app-accent, #a855f7);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.yt-inline-video-title {
+    margin: 0;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--app-text-primary, #ffffff);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.yt-inline-close-btn {
+    background: none;
+    border: none;
+    color: var(--app-text-muted, #94a3b8);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+}
+
+.yt-inline-close-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.yt-inline-player-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.85rem;
+    background: rgba(15, 23, 42, 0.6);
+    border-top: 1px solid var(--app-border, rgba(255, 255, 255, 0.1));
+}
+
+.yt-inline-nav-btns {
+    display: flex;
+    gap: 0.4rem;
+}
+
+
+
+.yt-btn-sm {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.78rem;
+}
+
+.yt-link-sm {
+    font-size: 0.78rem;
+}
+
+/* Single Series Card Quick Refresh Button */
+.yt-card-single-refresh-btn {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(15, 23, 42, 0.85);
+    color: var(--app-text-primary, #ffffff);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    cursor: pointer;
+    z-index: 5;
+    opacity: 0.85;
+    transition: all 0.2s ease;
+}
+
+.yt-card-single-refresh-btn:hover {
+    opacity: 1;
+    background: var(--app-accent, #a855f7);
+    color: #ffffff;
+    border-color: var(--app-accent, #a855f7);
+    transform: scale(1.1);
+}
+
+/* YouTube 16:9 Widescreen Thumbnail Aspect Ratio Grid */
+.yt-container .books-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+}
+
+.yt-container .book-card {
+    contain-intrinsic-size: 260px 220px;
+}
+
+.yt-container .book-card-cover {
+    height: auto !important;
+    aspect-ratio: 16 / 9 !important;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    background: #000000;
+}
+
+.yt-container .book-card-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Hover Play Overlay for Native book-card */
+.yt-card-play-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    z-index: 4;
+}
+
+.book-card:hover .yt-card-play-overlay {
+    opacity: 1;
+}
+
+.yt-card-play-icon {
+    width: 46px;
+    height: 46px;
+    background: #ff0000;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 1.15rem;
+    box-shadow: 0 4px 14px rgba(255, 0, 0, 0.6);
+    transform: scale(0.9);
+    transition: transform 0.2s ease;
+}
+
+.book-card:hover .yt-card-play-icon {
+    transform: scale(1);
+}
+
+/* Modal Player */
+.yt-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    box-sizing: border-box;
+}
+
+.yt-modal-dialog {
+    background-color: var(--app-bg-card, #1e293b);
+    border: 1px solid var(--app-border, rgba(255, 255, 255, 0.15));
+    border-radius: 16px;
+    width: 100%;
+    max-width: 960px;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+}
+
+.yt-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--app-border, rgba(255, 255, 255, 0.1));
+}
+
+.yt-modal-series-badge {
+    font-size: 0.72rem;
+    background: rgba(168, 85, 247, 0.15);
+    color: var(--app-accent, #a855f7);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 700;
+    display: inline-block;
+    margin-bottom: 0.25rem;
+}
+
+.yt-modal-title-box h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--app-text-primary, #ffffff);
+}
+
+.yt-modal-close-btn {
+    background: none;
+    border: none;
+    color: var(--app-text-muted, #94a3b8);
+    font-size: 1.4rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 6px;
+    transition: color 0.2s;
+}
+
+.yt-modal-close-btn:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.yt-player-container {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 Aspect Ratio */
+    background: #000000;
+}
+
+.yt-player-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.yt-modal-footer {
+    padding: 1rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    border-bottom: 1px solid var(--app-border, rgba(255, 255, 255, 0.1));
+}
+
+.yt-modal-meta {
+    font-size: 0.85rem;
+    color: var(--app-text-muted, #94a3b8);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.yt-external-link {
+    color: #ff0000;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.yt-external-link:hover {
+    text-decoration: underline;
+}
+
+.yt-modal-nav {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.yt-modal-desc {
+    padding: 1rem 1.25rem;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--app-text-muted, #cbd5e1);
+    white-space: pre-wrap;
+    max-height: 140px;
+    overflow-y: auto;
+    margin: 0;
+}

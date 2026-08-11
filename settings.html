@@ -1,0 +1,84 @@
+<!-- plugins/metadata/youtube_playlist/settings.html -->
+<div class="yt-settings-content">
+    <!-- 1. Registered Playlists -->
+    <div class="library-form-group" style="margin: 0;">
+        <div class="yt-settings-header-bar">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <label style="font-weight: 700; color: #fff; font-size: 0.88rem; margin: 0;">
+                    <i class="fa-solid fa-list-check" style="color: #ff0000; margin-right: 0.3rem;"></i> 
+                    <span data-i18n="registeredPlaylists">등록된 플레이리스트</span>
+                </label>
+                <span class="yt-settings-count-badge">0</span>
+            </div>
+            
+            <div class="yt-settings-action-btns">
+                <button type="button" class="yt-bulk-toggle-btn">
+                    <i class="fa-solid fa-file-import"></i> <span data-i18n="bulkImport">일괄 등록</span>
+                </button>
+                <button type="button" class="yt-add-btn">
+                    <i class="fa-solid fa-plus"></i> <span data-i18n="addPlaylist">플레이리스트 추가</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Real-time Filter Search Input -->
+        <div class="yt-settings-filter-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" class="yt-settings-filter-input" placeholder="등록된 플레이리스트 검색..." data-i18n-placeholder="filterPlaceholder" autocomplete="off">
+        </div>
+
+        <!-- Bulk Import Collapsible Panel -->
+        <div class="yt-bulk-panel" style="display: none;">
+            <div class="yt-bulk-header">
+                <span data-i18n="bulkTitle"><i class="fa-solid fa-paste"></i> 일괄 등록 (1줄에 1개씩 입력)</span>
+                <span class="yt-bulk-help" data-i18n="bulkFormatHelp">형식: URL/ID | 별칭(선택) | 일반/성인(선택 - 생략시 일반)</span>
+            </div>
+            <textarea class="yt-bulk-textarea" placeholder="유튜브 플레이리스트 URL 또는 ID를 한 줄에 하나씩 입력하세요...\n예시:\nhttps://www.youtube.com/playlist?list=PL123\nPL456 | 개발 강좌\nPL789 | 성인\nPL999 | 음악 영상 | 성인" data-i18n-placeholder="bulkPlaceholder"></textarea>
+            <div class="yt-bulk-actions">
+                <button type="button" class="yt-bulk-apply-btn" data-i18n="applyBulk"><i class="fa-solid fa-check"></i> 일괄 추가</button>
+                <button type="button" class="yt-bulk-cancel-btn" data-i18n="cancel"><i class="fa-solid fa-xmark"></i> 취소</button>
+            </div>
+        </div>
+
+        <!-- Hidden input bound to core form name="PLAYLISTS_JSON" -->
+        <input type="hidden" name="PLAYLISTS_JSON" class="yt-playlists-json-input" value="[]">
+
+        <!-- Scrollable Rows Container -->
+        <div class="yt-playlist-rows-container">
+            <!-- Dynamic playlist rows -->
+        </div>
+
+        <p style="font-size: 0.76rem; color: #94a3b8; margin: 0.5rem 0 0 0;" data-i18n="urlHelp">
+            유튜브 공개 또는 일부 공개 플레이리스트 URL(예: https://www.youtube.com/playlist?list=PL...) 또는 Playlist ID(PL...)를 입력하세요.
+        </p>
+    </div>
+
+    <!-- 2. Background Scan Interval -->
+    <div class="library-form-group" style="margin: 0;">
+        <label style="font-weight: 700; color: #fff; font-size: 0.88rem; margin-bottom: 0.4rem; display: block;">
+            <i class="fa-solid fa-clock-rotate-left" style="color: #ff0000; margin-right: 0.3rem;"></i> <span data-i18n="scanInterval">백그라운드 스캔 &amp; SQLite DB 캐시 갱신 주기</span>
+        </label>
+        <select name="UPDATE_INTERVAL_HOURS" style="width: 100%; max-width: 540px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 0.6rem 0.8rem; border-radius: 6px; outline: none; font-size: 0.88rem; cursor: pointer;">
+            <option value="1" data-i18n="interval1h">1시간 마다</option>
+            <option value="3" data-i18n="interval3h">3시간 마다</option>
+            <option value="6" selected data-i18n="interval6h">6시간 마다 (권장)</option>
+            <option value="12" data-i18n="interval12h">12시간 마다</option>
+            <option value="24" data-i18n="interval24h">24시간 마다</option>
+            <option value="0" data-i18n="interval0h">수동 새로고침만 사용</option>
+        </select>
+        <p style="font-size: 0.76rem; color: #94a3b8; margin: 0.4rem 0 0 0;" data-i18n="scanHelp">
+            백그라운드에서 지정된 시간 간격으로 새 영상 목록을 자동 수집하며, 라이브러리 접속 시에는 SQLite DB 캐시에서 0.01초 만에 즉시 로딩됩니다.
+        </p>
+    </div>
+
+    <!-- 3. Auto Play Toggle -->
+    <div class="library-form-group" style="margin: 0;">
+        <label style="font-weight: 700; color: #fff; font-size: 0.88rem; margin-bottom: 0.4rem; display: block;" data-i18n="otherOptions">
+            기타 옵션
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.5rem; color: #cbd5e1; font-size: 0.88rem; cursor: pointer;">
+            <input type="checkbox" name="AUTO_PLAY" checked>
+            <span data-i18n="autoPlay">영상 선택 시 플레이어에서 자동 재생</span>
+        </label>
+    </div>
+</div>

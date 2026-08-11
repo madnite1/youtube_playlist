@@ -1,0 +1,173 @@
+<!-- plugins/metadata/youtube_playlist/index.html -->
+<div class="yt-container">
+    <!-- Top Header & Navigation -->
+    <header class="yt-header">
+        <div class="yt-brand">
+            <div class="yt-icon-wrapper">
+                <i class="fa-brands fa-youtube"></i>
+            </div>
+            <div>
+                <h2 class="yt-title">Youtube</h2>
+                <p class="yt-subtitle" data-i18n="subtitle">등록된 유튜브 플레이리스트 목록 &amp; 영상 스트리밍</p>
+            </div>
+        </div>
+        <div class="yt-actions">
+            <div class="yt-search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="ytSearchInput" placeholder="플레이리스트 또는 영상 제목 검색..." data-i18n-placeholder="searchPlaceholder" autocomplete="off">
+            </div>
+            <button id="ytRefreshBtn" class="yt-btn yt-btn-secondary" title="전체 플레이리스트 새로고침">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span data-i18n="refreshAll">전체 새로고침</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Breadcrumb Bar (Hidden on Series List Root) -->
+    <nav id="ytBreadcrumb" class="yt-breadcrumb" style="display: none;">
+        <button id="ytBackToSeriesBtn" class="yt-breadcrumb-btn">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span data-i18n="backToSeries">전체 플레이리스트 목록</span>
+        </button>
+        <span class="yt-breadcrumb-sep">/</span>
+        <span id="ytCurrentSeriesTitle" class="yt-breadcrumb-current">플레이리스트 제목</span>
+    </nav>
+
+    <!-- Content View Area -->
+    <main class="yt-content">
+        <!-- Loading Spinner -->
+        <div id="ytLoadingState" class="yt-state-box">
+            <div class="yt-spinner"></div>
+            <p data-i18n="loading">YouTube 플레이리스트 데이터를 불러오는 중입니다...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="ytEmptyState" class="yt-state-box" style="display: none;">
+            <i class="fa-brands fa-youtube yt-empty-icon"></i>
+            <h3 data-i18n="emptyTitle">등록된 유튜브 플레이리스트가 없습니다.</h3>
+            <p data-i18n="emptyDesc">[환경설정] ⚙️ -&gt; [플러그인 설정] -&gt; [Youtube Playlist]에서 플레이리스트 URL/ID를 등록해주세요.</p>
+        </div>
+
+        <!-- Series Cards View (BookOasis Standard Grid) -->
+        <section id="ytSeriesView" class="yt-view-section">
+            <div class="yt-section-header">
+                <h3 class="yt-section-title"><i class="fa-solid fa-layer-group"></i> <span data-i18n="playlists">플레이리스트</span></h3>
+                <span id="ytSeriesCountBadge" class="yt-badge">0개 플레이리스트</span>
+            </div>
+            <div id="ytSeriesGrid" class="books-grid">
+                <!-- Series Cards dynamically inserted here -->
+            </div>
+        </section>
+
+        <!-- Videos Grid View (BookOasis Standard Grid + Sticky Top Player) -->
+        <section id="ytVideosView" class="yt-view-section" style="display: none;">
+            <!-- Mobile Sticky / Inline Top Player Container -->
+            <div id="ytInlinePlayerContainer" class="yt-inline-player-box" style="display: none;">
+                <div class="yt-inline-player-header">
+                    <div class="yt-inline-title-group">
+                        <span id="ytInlineSeriesBadge" class="yt-inline-badge" data-i18n="playlists">플레이리스트</span>
+                        <h4 id="ytInlineVideoTitle" class="yt-inline-video-title">영상 제목</h4>
+                    </div>
+                    <button id="ytInlineCloseBtn" class="yt-inline-close-btn" title="플레이어 닫기">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="yt-player-container">
+                    <iframe id="ytInlineIframePlayer"
+                            src=""
+                            title="YouTube video player"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen
+                            referrerpolicy="strict-origin-when-cross-origin">
+                    </iframe>
+                </div>
+                <div class="yt-inline-player-controls">
+                    <div class="yt-inline-nav-btns">
+                        <button id="ytInlinePrevBtn" class="yt-btn yt-btn-secondary yt-btn-sm">
+                            <i class="fa-solid fa-chevron-left"></i>
+                            <span data-i18n="prev">이전</span>
+                        </button>
+                        <button id="ytInlineNextBtn" class="yt-btn yt-btn-primary yt-btn-sm">
+                            <span data-i18n="next">다음</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <a id="ytInlineExternalLink" href="#" target="_blank" rel="noopener noreferrer" class="yt-external-link yt-link-sm">
+                        <span data-i18n="openYoutubeApp">YouTube 앱으로 보기</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Series Banner Info -->
+            <div class="yt-series-banner">
+                <img id="ytBannerCover" src="" alt="Cover" class="yt-banner-cover">
+                <div class="yt-banner-info">
+                    <h2 id="ytBannerTitle" class="yt-banner-title">플레이리스트 제목</h2>
+                    <p id="ytBannerMeta" class="yt-banner-meta">0개 영상 목록</p>
+                </div>
+                <button id="ytSeriesRefreshBtn" class="yt-btn yt-btn-secondary yt-btn-sm" style="margin-left: auto;" title="이 플레이리스트만 유튜브에서 최신 데이터로 새로고침">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span data-i18n="refreshPlaylist">플레이리스트 새로고침</span>
+                </button>
+            </div>
+
+            <div class="yt-section-header" style="margin-top: 1.5rem;">
+                <h3 class="yt-section-title"><i class="fa-solid fa-circle-play"></i> <span data-i18n="episodesList">에피소드 영상 목록</span></h3>
+                <span id="ytVideosCountBadge" class="yt-badge">0개 영상</span>
+            </div>
+            <div id="ytVideosGrid" class="books-grid">
+                <!-- Video Cards dynamically inserted here -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Embedded YouTube Player Desktop Modal (Used on wider screens) -->
+    <div id="ytPlayerModal" class="yt-modal-backdrop" style="display: none;">
+        <div class="yt-modal-dialog">
+            <div class="yt-modal-header">
+                <div class="yt-modal-title-box">
+                    <span id="ytModalSeriesName" class="yt-modal-series-badge" data-i18n="playlists">플레이리스트</span>
+                    <h4 id="ytModalVideoTitle">영상 제목</h4>
+                </div>
+                <button id="ytModalCloseBtn" class="yt-modal-close-btn" title="닫기 (ESC)">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="yt-player-container">
+                <iframe id="ytIframePlayer"
+                        src=""
+                        title="YouTube video player"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen
+                        referrerpolicy="strict-origin-when-cross-origin">
+                </iframe>
+            </div>
+
+            <div class="yt-modal-footer">
+                <div class="yt-modal-meta">
+                    <span id="ytModalPubDate"><i class="fa-regular fa-calendar"></i> -</span>
+                    <a id="ytModalExternalLink" href="#" target="_blank" rel="noopener noreferrer" class="yt-external-link">
+                        <span data-i18n="openYoutubeWeb">YouTube에서 보기</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </a>
+                </div>
+                
+                <div class="yt-modal-nav">
+                    <button id="ytPrevVideoBtn" class="yt-btn yt-btn-secondary">
+                        <i class="fa-solid fa-chevron-left"></i>
+                        <span data-i18n="prevEpisode">이전 회차</span>
+                    </button>
+                    <button id="ytNextVideoBtn" class="yt-btn yt-btn-primary">
+                        <span data-i18n="nextEpisode">다음 회차</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            <p id="ytModalDescription" class="yt-modal-desc">영상 설명이 여기에 표시됩니다.</p>
+        </div>
+    </div>
+</div>

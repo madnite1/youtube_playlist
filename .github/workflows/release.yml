@@ -68,10 +68,13 @@ jobs:
           name: ${{ steps.version.outputs.version }}
           body_path: release_body.md
           files: |
-            plugin_manager.py
+            youtube_playlist.py
             __init__.py
             VERSION
             index.html
             style.css
             script.js
+            settings.html
+            settings.js
+            settings.css
           fail_on_unmatched_files: false

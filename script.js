@@ -90,12 +90,21 @@
         return text;
     }
 
+    // 플러그인 i18n 적용 범위를 플러그인 컨테이너(.yt-container)로 한정.
+    // document 전체를 스캔하면 코어 UI의 data-i18n 요소(키가 코어 사전 전용)를
+    // 플러그인 사전에서 찾지 못해 키 문자열 그대로 덮어쓰는 문제 발생 (2026-08-12).
+    function getPluginRoot() {
+        return document.querySelector('.yt-container');
+    }
+
     function applyI18nDOM() {
-        document.querySelectorAll('[data-i18n]').forEach(el => {
+        const root = getPluginRoot();
+        if (!root) return;
+        root.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
             if (key) el.textContent = t(key);
         });
-        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        root.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
             const key = el.getAttribute('data-i18n-placeholder');
             if (key) el.placeholder = t(key);
         });

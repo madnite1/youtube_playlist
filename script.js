@@ -15,7 +15,7 @@
     // Video list filter state
     let videoSearchQuery = '';
     let videoSortKey = 'none';   // 'none' | 'view' | 'date'
-    let videoSortAsc = false;    // false = descending (default), true = ascending
+    let videoSortAsc = true;     // true = ascending (default), false = descending
 
 
 
@@ -773,7 +773,7 @@
         backToSeriesBtn.addEventListener('click', () => {
             videoSearchQuery = '';
             videoSortKey = 'none';
-            videoSortAsc = false;
+            videoSortAsc = true;
             if (videoSearchInput) videoSearchInput.value = '';
             if (videoSortSelect) videoSortSelect.value = 'none';
             updateSortDirBtn();

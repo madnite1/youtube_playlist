@@ -582,3 +582,129 @@
     overflow-y: auto;
     margin: 0;
 }
+
+/* Video List Filter Bar (Search + Sort) */
+.yt-video-filter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin: 0.75rem 0 1.25rem;
+    padding: 0.75rem 1rem;
+    background-color: var(--app-bg-card, #1e293b);
+    border: 1px solid var(--app-border, rgba(255, 255, 255, 0.1));
+    border-radius: 10px;
+}
+
+.yt-video-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.yt-video-search i {
+    position: absolute;
+    left: 0.75rem;
+    color: var(--app-text-muted, #94a3b8);
+    font-size: 0.9rem;
+    pointer-events: none;
+}
+
+.yt-video-search input {
+    width: 100%;
+    background-color: var(--app-input-bg, var(--app-bg-main, #0f172a));
+    border: 1px solid var(--app-border, rgba(255, 255, 255, 0.15));
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem 0.5rem 2.1rem;
+    color: var(--app-text-primary, #ffffff);
+    font-size: 0.88rem;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.yt-video-search input:focus {
+    outline: none;
+    border-color: var(--app-accent, #a855f7);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+}
+
+.yt-video-sort {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.yt-video-sort-select {
+    background-color: var(--app-input-bg, var(--app-bg-main, #0f172a));
+    border: 1px solid var(--app-border, rgba(255, 255, 255, 0.15));
+    border-radius: 8px;
+    padding: 0.5rem 0.6rem;
+    color: var(--app-text-primary, #ffffff);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.yt-video-sort-select:focus {
+    outline: none;
+    border-color: var(--app-accent, #a855f7);
+}
+
+.yt-sort-dir-btn {
+    padding: 0.45rem 0.65rem;
+    font-size: 0.85rem;
+    min-width: 36px;
+    justify-content: center;
+}
+
+.yt-sort-dir-btn.yt-sort-asc {
+    background-color: var(--app-accent, #a855f7);
+    color: #ffffff;
+    border-color: var(--app-accent, #a855f7);
+}
+
+/* 조회수 뱃지 (영상 카드) */
+.yt-view-badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: rgba(0, 0, 0, 0.75);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    backdrop-filter: blur(4px);
+}
+
+/* 순번 배지(#1): 오른쪽 → 왼쪽 상단으로 이동 (조회수 배지와 겹침 방지) */
+.yt-container .book-badge-count {
+    position: absolute;
+    top: 8px;
+    right: auto;
+    left: 8px;
+    z-index: 3;
+}
+
+/* 모바일/태블릿 필터 바 정렬 */
+@media (max-width: 720px) {
+    .yt-video-filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .yt-video-search {
+        flex: none;
+        width: 100%;
+    }
+    .yt-video-sort {
+        justify-content: flex-end;
+    }
+}

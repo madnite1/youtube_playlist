@@ -44,6 +44,26 @@ CACHE_DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "youtub
 
 
 
+def parse_view_count(text):
+    """'조회수 763만회' / '1.2만회' / '5회' / '1,234회' 형태의 문자열을 정수 조회수로 변환."""
+    if not text:
+        return 0
+    text = str(text).replace(",", "")
+    m = re.search(r"([\d.]+)\s*(억|만)?\s*회", text)
+    if not m:
+        return 0
+    try:
+        num = float(m.group(1))
+    except ValueError:
+        return 0
+    unit = m.group(2)
+    if unit == "억":
+        num *= 100000000
+    elif unit == "만":
+        num *= 10000
+    return int(num)
+
+
 def extract_playlist_id(url_or_id):
     """유튜브 플레이리스트 URL 또는 ID에서 pure Playlist ID를 추출합니다."""
     if not url_or_id:
@@ -449,6 +469,7 @@ class YouTubePlaylistMetadataProvider(BaseMetadataProvider):
 
         # 2. HTML 페이지 파싱 및 ytInitialData 딥 트리 탐색 (100+개 영상 실제 제목 정밀 추출)
         title_map = {}
+        view_map = {}
         ordered_vids = []
         html_title = ""
 
@@ -484,6 +505,7 @@ class YouTubePlaylistMetadataProvider(BaseMetadataProvider):
                                 lvm = obj['lockupViewModel']
                                 cid = lvm.get('contentId')
                                 title = ''
+                                view_text = ''
                                 t_obj = lvm.get('title', {})
                                 if isinstance(t_obj, dict) and 'content' in t_obj:
                                     title = t_obj['content']
@@ -491,8 +513,24 @@ class YouTubePlaylistMetadataProvider(BaseMetadataProvider):
                                     lbl = lvm.get('rendererContext', {}).get('accessibilityContext', {}).get('label', '')
                                     if lbl:
                                         title = re.sub(r'\s*(\d+분\s*\d+초|\d+:\d+|\d+시간.*|\d+분.*|\d+:\d+:\d+)$', '', lbl).strip()
+                                # metadataRows에서 조회수 텍스트 추출 ("조회수 763만회")
+                                try:
+                                    meta_rows = lvm.get('metadata', {}).get('lockupMetadataViewModel', {}) \
+                                                  .get('metadata', {}).get('contentMetadataViewModel', {}).get('metadataRows', [])
+                                    for _row in meta_rows:
+                                        for _part in _row.get('metadataParts', []):
+                                            _txt = _part.get('text', {}).get('content', '')
+                                            if _txt and '조회수' in _txt:
+                                                view_text = _txt
+                                                break
+                                        if view_text:
+                                            break
+                                except Exception:
+                                    pass
                                 if cid and title and cid not in title_map:
                                     title_map[cid] = title
+                                if cid and view_text and cid not in view_map:
+                                    view_map[cid] = parse_view_count(view_text)
 
                             # 클래식 playlistVideoRenderer 렌더러
                             elif 'playlistVideoRenderer' in obj:
@@ -506,6 +544,16 @@ class YouTubePlaylistMetadataProvider(BaseMetadataProvider):
                                     title = t_obj.get('simpleText', '')
                                 if vid and title and vid not in title_map:
                                     title_map[vid] = title
+                                # 클래식 렌더러의 조회수 (viewCountText)
+                                vct = pv.get('viewCountText', {})
+                                vc_text = ''
+                                if isinstance(vct, dict):
+                                    if 'simpleText' in vct:
+                                        vc_text = vct.get('simpleText', '')
+                                    elif 'runs' in vct and vct['runs']:
+                                        vc_text = vct['runs'][0].get('text', '')
+                                if vid and vc_text and vid not in view_map:
+                                    view_map[vid] = parse_view_count(vc_text)
 
                             for k, v in obj.items():
                                 parse_json(v)
@@ -547,6 +595,7 @@ class YouTubePlaylistMetadataProvider(BaseMetadataProvider):
                 "published": published,
                 "description": desc,
                 "thumbnail": thumb,
+                "view_count": view_map.get(vid, 0),
                 "url": f"https://www.youtube.com/watch?v={vid}",
                 "embed_url": f"https://www.youtube.com/embed/{vid}"
             })

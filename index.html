@@ -111,6 +111,25 @@
                 <h3 class="yt-section-title"><i class="fa-solid fa-circle-play"></i> <span data-i18n="episodesList">에피소드 영상 목록</span></h3>
                 <span id="ytVideosCountBadge" class="yt-badge">0개 영상</span>
             </div>
+
+            <!-- Video List Filter Bar: Search + Sort (Views / Upload Date, Asc / Desc) -->
+            <div class="yt-video-filter-bar">
+                <div class="yt-video-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="ytVideoSearchInput" placeholder="영상 제목 검색..." data-i18n-placeholder="videoSearchPlaceholder" autocomplete="off">
+                </div>
+                <div class="yt-video-sort">
+                    <select id="ytVideoSortSelect" class="yt-video-sort-select" title="정렬 기준">
+                        <option value="none" data-i18n="sortDefault">기본 순서</option>
+                        <option value="view" data-i18n="sortByViews">조회수</option>
+                        <option value="date" data-i18n="sortByDate">업로드 날짜</option>
+                    </select>
+                    <button id="ytVideoSortDirBtn" class="yt-btn yt-btn-secondary yt-btn-sm yt-sort-dir-btn" title="정렬 방향" data-i18n-title="sortDirDesc">
+                        <i class="fa-solid fa-arrow-down-wide-short"></i>
+                    </button>
+                </div>
+            </div>
+
             <div id="ytVideosGrid" class="books-grid">
                 <!-- Video Cards dynamically inserted here -->
             </div>

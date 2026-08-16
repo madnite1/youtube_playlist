@@ -12,6 +12,11 @@
     let modalPlayer = null;  // YT.Player instance (desktop modal)
     let inlinePlayer = null; // YT.Player instance (mobile inline)
 
+    // Video list filter state
+    let videoSearchQuery = '';
+    let videoSortKey = 'none';   // 'none' | 'view' | 'date'
+    let videoSortAsc = false;    // false = descending (default), true = ascending
+
 
 
     // i18n Dictionary
@@ -38,7 +43,15 @@
             noVideos: "등록된 영상이 없습니다.",
             noDescription: "영상 설명이 없습니다.",
             singleRefreshTitle: "이 플레이리스트만 새로고침",
-            noSearchResults: "'{q}'에 대한 검색 결과가 없습니다."
+            noSearchResults: "'{q}'에 대한 검색 결과가 없습니다.",
+            videoSearchPlaceholder: "영상 제목 검색...",
+            sortDefault: "기본 순서",
+            sortByViews: "조회수",
+            sortByDate: "업로드 날짜",
+            sortDirAsc: "오름차순",
+            sortDirDesc: "내림차순",
+            noFilteredVideos: "조건에 맞는 영상이 없습니다.",
+            viewCountText: "조회수 {n}"
         },
         en: {
             subtitle: "Registered YouTube playlists & video streaming",
@@ -60,9 +73,17 @@
             openYoutubeApp: "Watch on YouTube App",
             openYoutubeWeb: "Watch on YouTube",
             noVideos: "No videos found.",
-            noDescription: "No video description available.",
-            singleRefreshTitle: "Refresh this playlist",
-            noSearchResults: "No search results found for '{q}'."
+            noDescription: "No description.",
+            singleRefreshTitle: "Refresh this playlist only",
+            noSearchResults: "No search results found for '{q}'.",
+            videoSearchPlaceholder: "Search video title...",
+            sortDefault: "Default order",
+            sortByViews: "Views",
+            sortByDate: "Upload date",
+            sortDirAsc: "Ascending",
+            sortDirDesc: "Descending",
+            noFilteredVideos: "No videos match the criteria.",
+            viewCountText: "{n} views"
         }
     };
 
@@ -121,6 +142,9 @@
     const videosView = document.getElementById('ytVideosView');
     const seriesGrid = document.getElementById('ytSeriesGrid');
     const videosGrid = document.getElementById('ytVideosGrid');
+    const videoSearchInput = document.getElementById('ytVideoSearchInput');
+    const videoSortSelect = document.getElementById('ytVideoSortSelect');
+    const videoSortDirBtn = document.getElementById('ytVideoSortDirBtn');
     const breadcrumb = document.getElementById('ytBreadcrumb');
     const backToSeriesBtn = document.getElementById('ytBackToSeriesBtn');
     const currentSeriesTitle = document.getElementById('ytCurrentSeriesTitle');
@@ -241,7 +265,7 @@
                     bannerTitle.textContent = updatedSeries.title;
                     bannerCover.src = updatedSeries.cover;
                     bannerMeta.textContent = `${updatedSeries.item_count}개 영상 목록`;
-                    renderVideosList(updatedSeries.videos || []);
+                    renderVideosList();
                 } else {
                     renderSeriesList(pluginData.series || []);
                 }
@@ -327,38 +351,97 @@
         bannerMeta.textContent = t('videosCountBadge', { n: series.item_count });
 
         closeAllPlayers();
-        renderVideosList(series.videos || []);
+        renderVideosList();
         switchView('videos');
     }
 
-    // Render Videos Grid (BookOasis Native Card UI)
-    function renderVideosList(videos) {
+    // Format view count for display (e.g. 7630000 -> 763만, 1234 -> 1,234)
+    function formatViewCount(count) {
+        const n = parseInt(count, 10) || 0;
+        if (n >= 100000000) {
+            const v = (n / 100000000).toFixed(1).replace(/\.0$/, '');
+            return `${v}억`;
+        }
+        if (n >= 10000) {
+            const v = (n / 10000).toFixed(1).replace(/\.0$/, '');
+            return `${v}만`;
+        }
+        if (n >= 1000) {
+            return n.toLocaleString();
+        }
+        return n > 0 ? String(n) : '';
+    }
+
+    // Apply search filter + sort to videos, keeping original indices for playback
+    function getFilteredVideos() {
+        if (!currentSeries || !Array.isArray(currentSeries.videos)) return [];
+        const query = (videoSearchQuery || '').trim().toLowerCase();
+        let items = currentSeries.videos.map((v, idx) => ({ v, idx }));
+
+        if (query) {
+            items = items.filter(({ v }) => {
+                const mt = (v.title || '').toLowerCase().includes(query);
+                const md = (v.description || '').toLowerCase().includes(query);
+                return mt || md;
+            });
+        }
+
+        if (videoSortKey === 'view') {
+            items.sort((a, b) => {
+                const av = parseInt(a.v.view_count, 10) || 0;
+                const bv = parseInt(b.v.view_count, 10) || 0;
+                return videoSortAsc ? av - bv : bv - av;
+            });
+        } else if (videoSortKey === 'date') {
+            items.sort((a, b) => {
+                const ad = (a.v.published || '');
+                const bd = (b.v.published || '');
+                return videoSortAsc ? ad.localeCompare(bd) : bd.localeCompare(ad);
+            });
+        } else {
+            // 기본 순서: 플레이리스트 원본 순번(idx) 기준 오름/내림 정렬
+            items.sort((a, b) => videoSortAsc ? a.idx - b.idx : b.idx - a.idx);
+        }
+        return items;
+    }
+
+    // Render Videos Grid (BookOasis Native Card UI) with search filter + sort
+    function renderVideosList() {
         applyI18nDOM();
         videosGrid.innerHTML = '';
-        videosCountBadge.textContent = t('videosCountBadge', { n: videos.length });
+        const items = getFilteredVideos();
+        videosCountBadge.textContent = t('videosCountBadge', { n: items.length });
 
-        if (videos.length === 0) {
-            videosGrid.innerHTML = `<p class="yt-subtitle" style="grid-column: 1/-1; text-align: center; padding: 2rem;">${escapeHtml(t('noVideos'))}</p>`;
+        if (items.length === 0) {
+            const msg = (videoSearchQuery || videoSortKey !== 'none')
+                ? t('noFilteredVideos') : t('noVideos');
+            videosGrid.innerHTML = `<p class="yt-subtitle" style="grid-column: 1/-1; text-align: center; padding: 2rem;">${escapeHtml(msg)}</p>`;
             return;
         }
 
-        videos.forEach((video, index) => {
+        items.forEach(({ v, idx }, displayIndex) => {
             const card = document.createElement('div');
             card.className = 'book-card';
+            const viewText = formatViewCount(v.view_count);
+            const viewBadge = viewText
+                ? `<span class="yt-view-badge"><i class="fa-solid fa-eye"></i> ${escapeHtml(viewText)}</span>`
+                : '';
             card.innerHTML = `
                 <div class="book-card-cover">
-                    <img src="${escapeHtml(video.thumbnail)}" alt="${escapeHtml(video.title)}" loading="lazy">
+                    <img src="${escapeHtml(v.thumbnail)}" alt="${escapeHtml(v.title)}" loading="lazy">
                     <div class="yt-card-play-overlay">
                         <div class="yt-card-play-icon"><i class="fa-solid fa-play"></i></div>
                     </div>
-                    <span class="book-badge-count">#${index + 1}</span>
+                    <span class="book-badge-count">#${idx + 1}</span>
+                    ${viewBadge}
                 </div>
                 <div class="book-card-info">
-                    <h4 class="book-card-title" title="${escapeHtml(video.title)}">${escapeHtml(video.title)}</h4>
-                    <span class="book-card-author"><i class="fa-regular fa-calendar"></i> ${escapeHtml(video.published || '')}</span>
+                    <h4 class="book-card-title" title="${escapeHtml(v.title)}">${escapeHtml(v.title)}</h4>
+                    <span class="book-card-author"><i class="fa-regular fa-calendar"></i> ${escapeHtml(v.published || '')}</span>
                 </div>
             `;
-            card.addEventListener('click', () => playVideo(index));
+            // Use original index so player next/prev follow the full playlist order
+            card.addEventListener('click', () => playVideo(idx));
             videosGrid.appendChild(card);
         });
     }
@@ -610,24 +693,22 @@
     function performSearch(queryStr) {
         const query = (queryStr || '').trim().toLowerCase();
 
+        if (currentSeries) {
+            // Inside video view: sync to dedicated video filter bar
+            videoSearchQuery = queryStr || '';
+            if (videoSearchInput) videoSearchInput.value = videoSearchQuery;
+            renderVideosList();
+            return;
+        }
+
         if (!query) {
-            if (currentSeries) {
-                renderVideosList(currentSeries.videos || []);
-            } else if (pluginData && pluginData.series) {
+            if (pluginData && pluginData.series) {
                 renderSeriesList(pluginData.series || []);
             }
             return;
         }
 
-        if (currentSeries) {
-            // Filter videos inside current active series by title or description
-            const filtered = (currentSeries.videos || []).filter(v => {
-                const matchTitle = (v.title || '').toLowerCase().includes(query);
-                const matchDesc = (v.description || '').toLowerCase().includes(query);
-                return matchTitle || matchDesc;
-            });
-            renderVideosList(filtered);
-        } else if (pluginData && pluginData.series) {
+        if (pluginData && pluginData.series) {
             // Filter series list across Alias, Playlist Title, Original Title, and Episode Video Titles
             const filtered = pluginData.series.filter(s => {
                 const matchTitle = (s.title || '').toLowerCase().includes(query);
@@ -646,6 +727,57 @@
 
     if (searchInput) {
         searchInput.addEventListener('input', (e) => performSearch(e.target.value));
+    }
+
+    // Video list filter bar: dedicated search input
+    if (videoSearchInput) {
+        videoSearchInput.addEventListener('input', (e) => {
+            videoSearchQuery = e.target.value;
+            renderVideosList();
+        });
+    }
+
+    // Video list sort select
+    if (videoSortSelect) {
+        videoSortSelect.addEventListener('change', (e) => {
+            videoSortKey = e.target.value;
+            renderVideosList();
+        });
+    }
+
+    // Video list sort direction toggle (desc default, click -> asc)
+    function updateSortDirBtn() {
+        if (!videoSortDirBtn) return;
+        const icon = videoSortDirBtn.querySelector('i');
+        if (videoSortAsc) {
+            videoSortDirBtn.classList.add('yt-sort-asc');
+            if (icon) icon.className = 'fa-solid fa-arrow-up-short-wide';
+            videoSortDirBtn.title = t('sortDirAsc');
+        } else {
+            videoSortDirBtn.classList.remove('yt-sort-asc');
+            if (icon) icon.className = 'fa-solid fa-arrow-down-wide-short';
+            videoSortDirBtn.title = t('sortDirDesc');
+        }
+    }
+
+    if (videoSortDirBtn) {
+        videoSortDirBtn.addEventListener('click', () => {
+            videoSortAsc = !videoSortAsc;
+            updateSortDirBtn();
+            renderVideosList();
+        });
+    }
+
+    // Reset filter state when leaving video view back to series list
+    if (backToSeriesBtn) {
+        backToSeriesBtn.addEventListener('click', () => {
+            videoSearchQuery = '';
+            videoSortKey = 'none';
+            videoSortAsc = false;
+            if (videoSearchInput) videoSearchInput.value = '';
+            if (videoSortSelect) videoSortSelect.value = 'none';
+            updateSortDirBtn();
+        });
     }
 
     // Hook up BookOasis global library search input as well

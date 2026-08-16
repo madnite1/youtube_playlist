@@ -73,14 +73,8 @@
                     </button>
                 </div>
                 <div class="yt-player-container">
-                    <iframe id="ytInlineIframePlayer"
-                            src=""
-                            title="YouTube video player"
-                            frameborder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowfullscreen
-                            referrerpolicy="strict-origin-when-cross-origin">
-                    </iframe>
+                    <!-- YT.Player가 이 div 내부에 iframe을 생성 (IFrame API 방식) -->
+                    <div id="ytInlineIframePlayer"></div>
                 </div>
                 <div class="yt-inline-player-controls">
                     <div class="yt-inline-nav-btns">
@@ -137,14 +131,8 @@
             </div>
             
             <div class="yt-player-container">
-                <iframe id="ytIframePlayer"
-                        src=""
-                        title="YouTube video player"
-                        frameborder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        allowfullscreen
-                        referrerpolicy="strict-origin-when-cross-origin">
-                </iframe>
+                <!-- YT.Player가 이 div 내부에 iframe을 생성 (IFrame API 방식) -->
+                <div id="ytIframePlayer"></div>
             </div>
 
             <div class="yt-modal-footer">

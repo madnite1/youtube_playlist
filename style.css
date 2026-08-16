@@ -456,7 +456,10 @@
     top: 0;
     left: 0;
     width: 100vw;
+    /* 모바일/태블릿 브라우저 주소바 때문에 100vh가 실제 뷰포트보다 커져
+       하단(이전/다음 버튼)이 화면 밖으로 밀리는 문제 → dvh 동적 뷰포트 사용 */
     height: 100vh;
+    height: 100dvh;
     background-color: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(8px);
     z-index: 9999;

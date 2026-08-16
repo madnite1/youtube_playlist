@@ -9,6 +9,8 @@
     let lastLoadedDbType = null;
     let isFetching = false;
     let activePlayerType = 'modal'; // 'modal' or 'inline'
+    let modalPlayer = null;  // YT.Player instance (desktop modal)
+    let inlinePlayer = null; // YT.Player instance (mobile inline)
 
 
 
@@ -133,7 +135,6 @@
 
     // Desktop Modal Player
     const playerModal = document.getElementById('ytPlayerModal');
-    const iframePlayer = document.getElementById('ytIframePlayer');
     const modalSeriesName = document.getElementById('ytModalSeriesName');
     const modalVideoTitle = document.getElementById('ytModalVideoTitle');
     const modalPubDate = document.getElementById('ytModalPubDate');
@@ -145,7 +146,6 @@
 
     // Mobile Sticky Top Inline Player
     const inlinePlayerContainer = document.getElementById('ytInlinePlayerContainer');
-    const inlineIframePlayer = document.getElementById('ytInlineIframePlayer');
     const inlineSeriesBadge = document.getElementById('ytInlineSeriesBadge');
     const inlineVideoTitle = document.getElementById('ytInlineVideoTitle');
     const inlineExternalLink = document.getElementById('ytInlineExternalLink');
@@ -364,27 +364,28 @@
     }
 
     // Open Embedded Player (Mobile Sticky Top Player vs Desktop Modal Player)
+    // YouTube IFrame API 기반: iframe src 교체 대신 같은 플레이어 인스턴스에서 loadVideoById 사용
+    // → autoplay 정책(사용자 제스처 없는 새 iframe 로드 차단) 우회 + onStateChange 공식 콜백으로 자동 재생
     function playVideo(index) {
         if (!currentSeries || !currentSeries.videos || !currentSeries.videos[index]) return;
 
         currentVideoIndex = index;
         const video = currentSeries.videos[index];
-        const pageOrigin = encodeURIComponent(window.location.origin);
-        const videoId = video.id || '';
-        const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1&origin=${pageOrigin}&widget_referrer=${pageOrigin}`;
 
         if (isMobileView()) {
             // --- MOBILE STICKY TOP INLINE PLAYER ---
             activePlayerType = 'inline';
             playerModal.style.display = 'none';
-            if (iframePlayer) iframePlayer.src = ''; // stop desktop modal iframe
+            if (modalPlayer) modalPlayer.stopVideo(); // stop desktop modal player
 
             inlineSeriesBadge.textContent = `${currentSeries.title} (${index + 1}/${currentSeries.videos.length})`;
             inlineVideoTitle.textContent = video.title;
             inlineExternalLink.href = video.url;
 
             inlinePlayerContainer.style.display = 'block';
-            inlineIframePlayer.src = embedUrl;
+            if (inlinePlayer && video.id) {
+                inlinePlayer.loadVideoById(video.id);
+            }
 
             inlinePrevBtn.disabled = index <= 0;
             inlineNextBtn.disabled = index >= currentSeries.videos.length - 1;
@@ -396,7 +397,7 @@
             // --- DESKTOP MODAL PLAYER ---
             activePlayerType = 'modal';
             inlinePlayerContainer.style.display = 'none';
-            if (inlineIframePlayer) inlineIframePlayer.src = ''; // stop mobile inline iframe
+            if (inlinePlayer) inlinePlayer.stopVideo(); // stop mobile inline player
 
             modalSeriesName.textContent = `${currentSeries.title} (${index + 1}/${currentSeries.videos.length})`;
             modalVideoTitle.textContent = video.title;
@@ -406,8 +407,10 @@
 
             playerModal.style.display = 'flex';
 
-            // Direct src update to permanent DOM element
-            iframePlayer.src = embedUrl;
+            // 같은 플레이어 인스턴스에서 영상 전환 (src 교체 없음)
+            if (modalPlayer && video.id) {
+                modalPlayer.loadVideoById(video.id);
+            }
 
             prevVideoBtn.disabled = index <= 0;
             nextVideoBtn.disabled = index >= currentSeries.videos.length - 1;
@@ -416,41 +419,85 @@
 
     // Close Player Methods
     function closeAllPlayers() {
-        if (iframePlayer) iframePlayer.src = '';
-        if (inlineIframePlayer) inlineIframePlayer.src = '';
+        if (modalPlayer) modalPlayer.stopVideo();
+        if (inlinePlayer) inlinePlayer.stopVideo();
         playerModal.style.display = 'none';
         inlinePlayerContainer.style.display = 'none';
     }
 
-    // Secondary PostMessage Event Listener Fallback (Autoplay next video on end)
-    window.addEventListener('message', (event) => {
-        if (!event.data) return;
+    // IFrame API 준비 상태
+    let apiReady = false;
 
-        let msg = event.data;
-        if (typeof msg === 'string') {
-            try {
-                msg = JSON.parse(msg);
-            } catch (e) {
-                return;
-            }
+    // new Function 스코프에서 실행되므로 window에 콜백을 명시적으로 등록해야 함
+    window.onYouTubeIframeAPIReady = function () {
+        apiReady = true;
+        console.log('[YouTubePlaylistPlugin] IFrame API ready.');
+
+        try {
+            modalPlayer = new YT.Player('ytIframePlayer', {
+                width: '100%',
+                height: '100%',
+                videoId: '',
+                playerVars: {
+                    autoplay: 1,
+                    rel: 0
+                },
+                events: {
+                    onStateChange: function (event) {
+                        // 영상 종료(0) 감지 → 다음 영상 자동 재생
+                        if (event.data === 0) {
+                            if (currentSeries && currentSeries.videos) {
+                                if (currentVideoIndex >= 0 && currentVideoIndex < currentSeries.videos.length - 1) {
+                                    console.log(`[YouTubePlaylistPlugin] IFrameAPI: Video Ended. Autoplay next #${currentVideoIndex + 2}`);
+                                    playVideo(currentVideoIndex + 1);
+                                } else {
+                                    console.log('[YouTubePlaylistPlugin] IFrameAPI: Last video ended. Stop.');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            inlinePlayer = new YT.Player('ytInlineIframePlayer', {
+                width: '100%',
+                height: '100%',
+                videoId: '',
+                playerVars: {
+                    autoplay: 1,
+                    rel: 0
+                },
+                events: {
+                    onStateChange: function (event) {
+                        if (event.data === 0) {
+                            if (currentSeries && currentSeries.videos) {
+                                if (currentVideoIndex >= 0 && currentVideoIndex < currentSeries.videos.length - 1) {
+                                    console.log(`[YouTubePlaylistPlugin] IFrameAPI(inline): Video Ended. Autoplay next #${currentVideoIndex + 2}`);
+                                    playVideo(currentVideoIndex + 1);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (err) {
+            console.error('[YouTubePlaylistPlugin] IFrame API player init error:', err);
         }
+    };
 
-        if (typeof msg !== 'object') return;
-
-        let isEnded = false;
-        if (msg.event === 'onStateChange' && msg.info === 0) {
-            isEnded = true;
-        } else if (msg.event === 'infoDelivery' && msg.info && msg.info.playerState === 0) {
-            isEnded = true;
+    // YouTube IFrame API 동적 로드 (index.html의 <script> 태그는 innerHTML 주입으로 실행되지 않으므로 JS에서 로드)
+    function loadYouTubeIframeApi() {
+        if (window.YT && window.YT.Player) {
+            apiReady = true;
+            return;
         }
-
-        if (isEnded && currentSeries && currentSeries.videos) {
-            if (currentVideoIndex >= 0 && currentVideoIndex < currentSeries.videos.length - 1) {
-                console.log(`[YouTubePlaylistPlugin] PostMessage: Video Ended. Autoplay next #${currentVideoIndex + 2}`);
-                playVideo(currentVideoIndex + 1);
-            }
-        }
-    });
+        if (document.getElementById('yt-iframe-api-script')) return;
+        const tag = document.createElement('script');
+        tag.id = 'yt-iframe-api-script';
+        tag.src = 'https://www.youtube.com/iframe_api';
+        tag.async = true;
+        document.head.appendChild(tag);
+    }
 
     // View Switching
     function switchView(viewName) {
@@ -619,4 +666,5 @@
     // Initial Load
     loadData(true);
     attachSafeListeners();
+    loadYouTubeIframeApi();
 })();

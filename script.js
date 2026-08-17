@@ -446,6 +446,131 @@
         });
     }
 
+    // ------------------------------------------------------------------
+    // 미니 플레이어 — 별도 플로팅 창 (원래 모달 플레이어와 완전 독립)
+    // 카드의 미니 버튼으로 진입, 새 YT.Player를 body에 생성해 영상만 재생.
+    // 원래 플레이어 마크업/CSS는 수정하지 않는다.
+    // ------------------------------------------------------------------
+    let miniBox = null;      // 플로팅 창 요소
+    let miniHost = null;     // YT.Player가 iframe 생성할 div
+    let miniPlayer = null;   // 미니 전용 YT.Player 인스턴스
+    let miniIndex = -1;
+    let miniTitleEl = null;  // 하단 타이틀 바 요소
+    let miniStageEl = null;  // 영상 스테이지 요소
+    let miniMinimized = false;
+
+    function openMiniPlayer(index) {
+        if (!currentSeries || !currentSeries.videos || !currentSeries.videos[index]) return;
+        const video = currentSeries.videos[index];
+
+        // 이미 열려있으면 재사용 (+최소화 상태면 펼치기)
+        if (miniBox) {
+            if (miniIndex === index) {
+                if (miniMinimized) restoreMini();
+                return;
+            }
+            miniIndex = index;
+            if (miniTitleEl) miniTitleEl.textContent = video.title || '';
+            if (miniPlayer) {
+                miniPlayer.loadVideoById(video.id);
+                miniPlayer.playVideo();
+            }
+            return;
+        }
+
+        miniIndex = index;
+        // 플로팅 창 생성 (body 최상위 → 카테고리 전환에도 유지)
+        miniBox = document.createElement('div');
+        miniBox.className = 'yt-mini-box';
+        miniBox.innerHTML = `
+            <div class="yt-mini-actions">
+                <button class="yt-mini-btn yt-mini-min" title="최소화"><i class="fa-solid fa-window-minimize"></i></button>
+                <button class="yt-mini-btn yt-mini-close" title="닫기"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="yt-mini-stage"></div>
+            <div class="yt-mini-title"></div>
+        `;
+        miniHost = miniBox.querySelector('.yt-mini-stage');
+        miniStageEl = miniHost;
+        miniTitleEl = miniBox.querySelector('.yt-mini-title');
+        miniTitleEl.textContent = video.title || '';
+        document.body.appendChild(miniBox);
+
+        miniBox.querySelector('.yt-mini-close').addEventListener('click', closeMiniPlayer);
+        miniBox.querySelector('.yt-mini-min').addEventListener('click', (e) => {
+            e.stopPropagation();
+            minimizeMini();
+        });
+        // 하단 타이틀 바 클릭 → 복원
+        miniTitleEl.addEventListener('click', () => {
+            if (miniMinimized) restoreMini();
+        });
+
+        // 별도 YT.Player 인스턴스 — 클릭 제스처 내 new + playVideo → autoplay 정책 우회
+        if (window.YT && window.YT.Player) {
+            miniPlayer = new YT.Player(miniHost, {
+                width: '100%',
+                height: '100%',
+                videoId: video.id,
+                playerVars: { autoplay: 1, rel: 0 },
+                events: {
+                    onStateChange: function (event) {
+                        // 종료(0) 시 다음 영상 자동 재생
+                        if (event.data === 0 && currentSeries && currentSeries.videos) {
+                            if (miniIndex >= 0 && miniIndex < currentSeries.videos.length - 1) {
+                                miniIndex += 1;
+                                const nextVideo = currentSeries.videos[miniIndex];
+                                if (nextVideo && miniPlayer) {
+                                    miniPlayer.loadVideoById(nextVideo.id);
+                                    miniPlayer.playVideo();
+                                    // 하단 타이틀 바 + 전역 인덱스 동기화
+                                    if (miniTitleEl) miniTitleEl.textContent = nextVideo.title || '';
+                                    currentVideoIndex = miniIndex;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            // IFrame API 아직 로드 안 된 경우 — 대기 후 재시도
+            miniBox.remove();
+            miniBox = null;
+            miniHost = null;
+            alert('미니 플레이어를 열 수 없습니다. 잠시 후 다시 시도해주세요.');
+        }
+    }
+
+    // 최소화 — 영상 스테이지 숨기고 하단 타이틀 바만 남김 (재생은 계속)
+    function minimizeMini() {
+        if (!miniBox || miniMinimized) return;
+        miniMinimized = true;
+        miniBox.classList.add('yt-mini-minimized');
+    }
+
+    // 복원 — 미니 플레이어 창 다시 표시
+    function restoreMini() {
+        if (!miniBox || !miniMinimized) return;
+        miniMinimized = false;
+        miniBox.classList.remove('yt-mini-minimized');
+    }
+
+    function closeMiniPlayer() {
+        if (miniPlayer) {
+            try { miniPlayer.destroy(); } catch (e) { /* noop */ }
+            miniPlayer = null;
+        }
+        if (miniBox) {
+            miniBox.remove();
+            miniBox = null;
+        }
+        miniHost = null;
+        miniStageEl = null;
+        miniTitleEl = null;
+        miniIndex = -1;
+        miniMinimized = false;
+    }
+
     // Open Embedded Player (Mobile Sticky Top Player vs Desktop Modal Player)
     // YouTube IFrame API 기반: iframe src 교체 대신 같은 플레이어 인스턴스에서 loadVideoById 사용
     // → autoplay 정책(사용자 제스처 없는 새 iframe 로드 차단) 우회 + onStateChange 공식 콜백으로 자동 재생
@@ -497,7 +622,28 @@
 
             prevVideoBtn.disabled = index <= 0;
             nextVideoBtn.disabled = index >= currentSeries.videos.length - 1;
+
+            // 모달 푸터에 "미니 플레이어로 보기" 버튼 동적 삽입 (index.html 불변)
+            ensureModalMiniBtn();
         }
+    }
+
+    // 모달 푸터의 이전/다음 버튼 옆에 미니 플레이어 전환 버튼 추가
+    function ensureModalMiniBtn() {
+        const nav = document.querySelector('.yt-modal-nav');
+        if (!nav) return;
+        if (nav.querySelector('.yt-mini-modal-btn')) return; // 이미 있음
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'yt-btn yt-btn-secondary yt-mini-modal-btn';
+        btn.innerHTML = '<i class="fa-solid fa-window-restore"></i><span>미니 플레이어로 보기</span>';
+        btn.addEventListener('click', () => {
+            // 현재 재생 중인 영상을 미니 플레이어로 전환 (모달 닫기)
+            const idx = currentVideoIndex;
+            closeAllPlayers();
+            openMiniPlayer(idx);
+        });
+        nav.appendChild(btn);
     }
 
     // Close Player Methods

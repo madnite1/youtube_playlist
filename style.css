@@ -708,3 +708,106 @@
         justify-content: flex-end;
     }
 }
+
+/* ------------------------------------------------------------------
+   미니 플레이어 — 별도 플로팅 창 (원래 플레이어와 독립)
+   ------------------------------------------------------------------ */
+.yt-mini-modal-btn {
+    margin-left: 0.5rem;
+}
+
+.yt-mini-box {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    width: 360px;
+    z-index: 2147483000;
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+/* 상단 액션 버튼 (닫기/최소화) — 터치 기기 대응: 항상 표시 */
+.yt-mini-box .yt-mini-actions {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.5rem;
+    z-index: 10;
+    display: flex;
+    gap: 0.25rem;
+    opacity: 1;
+}
+
+.yt-mini-box .yt-mini-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    font-size: 0.85rem;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.yt-mini-box .yt-mini-btn:hover {
+    background: rgba(168, 85, 247, 0.85);
+}
+
+.yt-mini-box .yt-mini-close:hover {
+    background: rgba(220, 38, 38, 0.85);
+}
+
+.yt-mini-box .yt-mini-stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+}
+
+.yt-mini-box .yt-mini-stage iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* 하단 타이틀 바 — 최소화 시 이 바만 남아 하단에 고정 */
+.yt-mini-box .yt-mini-title {
+    display: none;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    color: #e2e8f0;
+    background: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    text-align: left;
+}
+
+/* 최소화 상태 — 영상/액션 숨기고 타이틀 바만 하단에 */
+.yt-mini-box.yt-mini-minimized .yt-mini-stage,
+.yt-mini-box.yt-mini-minimized .yt-mini-actions {
+    display: none;
+}
+
+.yt-mini-box.yt-mini-minimized .yt-mini-title {
+    display: block;
+}
+
+/* 태블릿 가로 대응 */
+@media (max-width: 768px) {
+    .yt-mini-box {
+        width: min(340px, calc(100vw - 1rem));
+        right: 0.5rem;
+        bottom: 0.5rem;
+    }
+}

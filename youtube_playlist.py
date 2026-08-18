@@ -189,13 +189,21 @@ class YouTubePlaylistMetadataProvider(BaseMetadataProvider):
             "type": "checkbox",
             "default": True,
             "description": "영상 선택 시 모달 플레이어에서 자동 재생 여부"
+        },
+        {
+            "key": "MINI_PLAYER_ENABLED",
+            "label": "미니 플레이어 사용",
+            "type": "checkbox",
+            "default": True,
+            "description": "설정 시 모달 플레이어에 '미니 플레이어로 보기' 버튼이 표시되어 별도 플로팅 창으로 영상을 재생할 수 있습니다. 해제 시 미니 플레이어 버튼과 동작이 모두 비활성화됩니다."
         }
     ]
 
     category_tab = {
         "title": "Youtube",
         "icon": "fa-brands fa-youtube",
-        "order": 85
+        "order": 85,
+        "sessions": "all"
     }
 
     # 업데이트 매니페스트.
@@ -404,8 +412,20 @@ class YouTubePlaylistMetadataProvider(BaseMetadataProvider):
             "category": "Youtube",
             "db_type": current_db,
             "total_series": len(series_data),
-            "series": series_data
+            "series": series_data,
+            "config": {
+                "mini_player_enabled": self._is_mini_player_enabled(current_db)
+            }
         }
+
+    def _is_mini_player_enabled(self, db_type):
+        """미니 플레이어 사용 설정 여부 (MINI_PLAYER_ENABLED, 기본 True)"""
+        try:
+            cfg = self.get_plugin_config(db_type, default={}) or {}
+            val = str(cfg.get("MINI_PLAYER_ENABLED", "true")).strip().lower()
+            return val not in ("0", "false", "no", "off", "")
+        except Exception:
+            return True
 
     def _fetch_playlist_details(self, playlist_id, custom_title=""):
         """공개 / 일부 공개 유튜브 플레이리스트 정보 및 영상 목록 수집 (Web/RSS Hybrid Parser)"""

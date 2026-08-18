@@ -42,6 +42,7 @@
             adultLibrary: "🔞 성인 보관함",
             otherOptions: "기타 옵션",
             autoPlay: "영상 선택 시 플레이어에서 자동 재생",
+            miniPlayer: "미니 플레이어 사용 (별도 플로팅 창으로 영상 재생)",
             deleteTitle: "삭제",
             interval1h: "1시간 마다",
             interval3h: "3시간 마다",
@@ -70,6 +71,7 @@
             adultLibrary: "🔞 Adult Library",
             otherOptions: "Other Options",
             autoPlay: "Autoplay video on selection",
+            miniPlayer: "Use mini player (play video in a separate floating window)",
             deleteTitle: "Delete",
             interval1h: "Every 1 hour",
             interval3h: "Every 3 hours",
@@ -114,6 +116,30 @@
     }
 
     applyI18nDOMSettings();
+
+    // 저장된 설정(config) 값에 맞춰 체크박스 상태를 명시적으로 반영한다.
+    // (코어 applyConfigValues 는 config 키가 없으면 HTML 기본 checked 를 건드리지
+    //  않으므로, 여기서 config 를 기준으로 강제 설정한다.)
+    function syncCheckboxesFromConfig() {
+        try {
+            const cfg = config || {};
+            const sync = (name) => {
+                const el = root.querySelector(`input[type="checkbox"][name="${name}"]`);
+                if (!el) return;
+                const val = cfg[name];
+                // 명시 값이 있으면 반영, 없으면 true(기본)로
+                const on = val === undefined || val === null
+                    ? true
+                    : !(String(val).toLowerCase() in { '0': 1, 'false': 1, 'no': 1, 'off': 1, '': 1 });
+                el.checked = on;
+            };
+            sync('AUTO_PLAY');
+            sync('MINI_PLAYER_ENABLED');
+        } catch (e) {
+            console.warn('[YouTubePlaylistSettings] checkboxes sync failed:', e);
+        }
+    }
+    syncCheckboxesFromConfig();
 
     let titleMap = {};
     let origTitleMap = {};

@@ -12,6 +12,10 @@
     let modalPlayer = null;  // YT.Player instance (desktop modal)
     let inlinePlayer = null; // YT.Player instance (mobile inline)
 
+    // 미니 플레이어 사용 설정 — 뷰어 페이지에는 config가 주입되지 않으므로
+    // 설정 페이지에서만 data-plugin-config를 읽어 캐시로 보존. 없으면 기본 True.
+    let miniPlayerEnabled = true;
+
     // Video list filter state
     let videoSearchQuery = '';
     let videoSortKey = 'none';   // 'none' | 'view' | 'date'
@@ -228,6 +232,11 @@
             if (json.success) {
                 pluginData = json.data || json;
                 lastLoadedDbType = dbType;
+                // 미니 플레이어 사용 설정 동기화 (서버 config 우선, 없으면 유지)
+                if (json.config && typeof json.config.mini_player_enabled === 'boolean') {
+                    miniPlayerEnabled = json.config.mini_player_enabled;
+                    console.log(`[YouTubePlaylistPlugin] Mini player enabled: ${miniPlayerEnabled}`);
+                }
                 renderSeriesList(pluginData.series || []);
             } else {
                 showEmpty(true);
@@ -460,6 +469,8 @@
     let miniMinimized = false;
 
     function openMiniPlayer(index) {
+        // 설정에서 미니 플레이어가 꺼져 있으면 동작 차단
+        if (!miniPlayerEnabled) return;
         if (!currentSeries || !currentSeries.videos || !currentSeries.videos[index]) return;
         const video = currentSeries.videos[index];
 
@@ -629,11 +640,17 @@
     }
 
     // 모달 푸터의 이전/다음 버튼 옆에 미니 플레이어 전환 버튼 추가
+    // 설정(MINI_PLAYER_ENABLED)이 켜져 있을 때만 표시
     function ensureModalMiniBtn() {
         const nav = document.querySelector('.yt-modal-nav');
         if (!nav) return;
-        if (nav.querySelector('.yt-mini-modal-btn')) return; // 이미 있음
-        const btn = document.createElement('button');
+        let btn = nav.querySelector('.yt-mini-modal-btn');
+        if (!miniPlayerEnabled) {
+            if (btn) btn.remove(); // 설정 해제 시 기존 버튼 제거
+            return;
+        }
+        if (btn) return; // 이미 있음
+        btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'yt-btn yt-btn-secondary yt-mini-modal-btn';
         btn.innerHTML = '<i class="fa-solid fa-window-restore"></i><span>미니 플레이어로 보기</span>';
@@ -647,6 +664,7 @@
     }
 
     // Close Player Methods
+    // 주의: 미니 플레이어는 독립 플로팅 창이므로 여기서 닫지 않음 (카테고리 전환에도 유지)
     function closeAllPlayers() {
         if (modalPlayer) modalPlayer.stopVideo();
         if (inlinePlayer) inlinePlayer.stopVideo();

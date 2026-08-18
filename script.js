@@ -609,6 +609,9 @@
             inlinePrevBtn.disabled = index <= 0;
             inlineNextBtn.disabled = index >= currentSeries.videos.length - 1;
 
+            // 모바일 인라인 플레이어 컨트롤에 "미니 플레이어" 버튼 삽입
+            ensureInlineMiniBtn();
+
             // Scroll top player into view smoothly
             inlinePlayerContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
@@ -661,6 +664,36 @@
             openMiniPlayer(idx);
         });
         nav.appendChild(btn);
+    }
+
+    // 모바일 인라인 플레이어 컨트롤에 "미니 플레이어" 전환 버튼 동적 삽입
+    // (데스크톱 모달의 ensureModalMiniBtn과 동일 패턴 — index.html 불변)
+    function ensureInlineMiniBtn() {
+        const controls = document.querySelector('.yt-inline-player-controls');
+        if (!controls) return;
+        let btn = controls.querySelector('.yt-mini-inline-btn');
+        if (!miniPlayerEnabled) {
+            if (btn) btn.remove(); // 설정 해제 시 기존 버튼 제거
+            return;
+        }
+        if (btn) return; // 이미 있음
+        btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'yt-btn yt-btn-secondary yt-btn-sm yt-mini-inline-btn';
+        btn.innerHTML = '<i class="fa-solid fa-window-restore"></i><span>미니 플레이어</span>';
+        btn.addEventListener('click', () => {
+            // 현재 재생 중인 영상을 미니 플레이어로 전환 (인라인 플레이어 닫기)
+            const idx = currentVideoIndex;
+            closeAllPlayers();
+            openMiniPlayer(idx);
+        });
+        // 이전/다음 버튼 그룹과 외부 링크 사이에 삽입
+        const externalLink = controls.querySelector('.yt-external-link');
+        if (externalLink) {
+            controls.insertBefore(btn, externalLink);
+        } else {
+            controls.appendChild(btn);
+        }
     }
 
     // Close Player Methods

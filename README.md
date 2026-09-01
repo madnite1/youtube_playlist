@@ -2,6 +2,20 @@
 
 [BookOasis](https://github.com/leeyj/BookOasis_stable) 미디어 서버에서 유튜브 **공개 및 일부 공개(Unlisted) 플레이리스트**를 등록하여 라이브러리의 `Youtube` 카테고리 메뉴에서 YouTube 영상 스트리밍을 제공하는 **1등 시민(First-class Citizen) 카테고리 레벨 플러그인**입니다.
 
+## 📌 v1.0.11 — BookOasis v2.5.x 호환성 정리
+
+- `window.BookOasisPlugin.getSession()` 및 `bookoasis:session-change` 공식 계약 사용
+- `window.currentLibraryType`, `window.state`, 코어 DOM selector 등 내부 구현 의존 제거
+- Youtube 카테고리 노출 세션을 `general` / `adult`로 명확히 제한
+- `window.BookOasisPlugin.getCachedImageUrl()`로 플레이리스트/영상 썸네일 로컬 WebP 캐시 지원
+- `AUTO_PLAY` 설정을 YouTube IFrame 플레이어의 실제 재생 방식에 반영
+- `get_dashboard_data()`의 `limit` 준수 및 공통 `items` 계약 지원 (`series` 하위 호환 유지)
+- 빈 설정 화면에서 샘플 플레이리스트가 실제 설정값으로 저장될 수 있던 문제 수정
+- BookOasis 메인 검색창 DOM hook 및 내부 i18n 전역 의존 제거
+- 표준 `unittest` 기반 플러그인 계약 회귀 테스트 추가
+
+> BookOasis 코어 소스/문서 수정 없이 공개 플러그인 API 계약만 사용합니다.
+
 ---
 
 ## ⚙️ 설정 및 사용 방법 (Setup & User Guide)
@@ -22,7 +36,7 @@
 
 ### 3. Youtube 카테고리 시청 및 검색
 - 좌측 사이드바 **`Youtube`** 카테고리 클릭 → SQLite DB에서 **0.01초 만에 최속 로딩**
-- **통합 검색**: 상단 검색창에 키워드 입력  
+- **플러그인 검색**: Youtube 화면의 전용 검색창에 키워드 입력
   *(별칭, 유튜브 원본 제목, 개별 에피소드 영상 제목까지 실시간 다중 매칭)*
 - **개별 플레이리스트 새로고침**: 카드 우상단 **🔄 버튼** 또는 상세 화면 배너의 **`[플레이리스트 새로고침]`** 버튼 클릭
 
@@ -35,13 +49,14 @@ plugins/metadata/youtube_playlist/
   ├── __init__.py                    # Python 모듈 패키지 (YouTubePlaylistMetadataProvider export)
   ├── youtube_playlist.py            # 메인 파이썬 모듈 (Dual-DB Sync, SQLite WAL 캐시, Web/RSS Hybrid 파서)
   ├── youtube_playlist_cache.db      # SQLite 로컬 캐시 DB (자동 생성, .gitignore 처리)
-  ├── VERSION                        # 버전 관리 파일: {"plugin version": "1.0.0"}
+  ├── VERSION                        # 버전 관리 파일: {"plugin version": "1.0.11"}
   ├── index.html                     # 라이브러리 Youtube 카테고리 풀페이지 HTML (i18n 지원)
   ├── style.css                      # 풀페이지 CSS (16:9 썸네일, Sticky/Modal 플레이어, 테마 연동)
   ├── script.js                      # 풀페이지 JS (다중 필드 검색, 개별 새로고침, 듀얼 플레이어, i18n)
   ├── settings.html                  # 환경설정 탭 커스텀 폼 HTML (5개 고정 스크롤, 검색, 일괄 등록)
   ├── settings.css                   # 환경설정 탭 미세 스타일 및 전용 스크롤바
   ├── settings.js                    # 환경설정 탭 동적 행 관리, 자동 타이틀 힌트, 일괄 파서
+  ├── tests/test_youtube_playlist.py # BookOasis 플러그인 계약 회귀 테스트
   ├── screenshots/                   # 스크린샷 이미지 디렉토리
   ├── LICENSE                        # GNU AGPL-3.0 라이선스 문서
   └── README.md                      # 이 문서
@@ -69,7 +84,7 @@ plugins/metadata/youtube_playlist/
 
 ### 1. 🌐 i18n 국제화 / 다국어 지원 (Korean & English Support)
 - **한국어(ko) 및 영어(en)** 완전 전면 지원
-- 브라우저 및 BookOasis 언어 설정 (`window.i18n.currentLang`, `localStorage`) 자동 감지
+- 브라우저 표준 언어 정보 (`document.documentElement.lang`, `navigator.language`)만 사용해 코어 내부 전역에 의존하지 않음
 - 영어(`en`) 기본 폴백(Fallback) 지원으로 글로벌 사용 환경 호환
 
 ### 2. 🔍 4중 다중 필드 통합 검색 (Multi-field Integrated Search)
@@ -78,7 +93,7 @@ plugins/metadata/youtube_playlist/
   2) **현재 표출 제목** (`title`)
   3) **유튜브 원본 제목** (`original_title`)
   4) **수집된 개별 에피소드 영상 제목 및 설명** (`video.title` / `video.description`)
-- BookOasis 최상단 메인 검색창(`library-search`)과 플러그인 전용 검색창 모두 완벽 동기화
+- BookOasis 코어 DOM에는 직접 의존하지 않고 플러그인 전용 검색창에서 독립적으로 동작
 
 ### 3. ⚙️ 컴팩트 5개 고정 스크롤 & 일괄 등록 (Compact Settings UI & Smart Bulk Import)
 - **5개 아이템 고정 높이 스크롤바** (`max-height: 220px`): 항목이 20+개 이상 늘어나도 설정 페이지 길이 유지

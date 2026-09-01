@@ -83,20 +83,8 @@
     };
 
     function getLang() {
-        let lang = '';
-        if (window.i18n && window.i18n.currentLang) {
-            lang = window.i18n.currentLang;
-        } else if (localStorage.getItem('bookoasis_lang')) {
-            lang = localStorage.getItem('bookoasis_lang');
-        } else if (document.cookie.includes('bookoasis_lang=')) {
-            const m = document.cookie.match(/bookoasis_lang=([^;]+)/);
-            if (m) lang = m[1];
-        } else if (document.documentElement.lang) {
-            lang = document.documentElement.lang;
-        } else if (navigator.language) {
-            lang = navigator.language;
-        }
-        return (lang || 'en').toLowerCase().startsWith('ko') ? 'ko' : 'en';
+        const lang = document.documentElement.lang || navigator.language || 'en';
+        return String(lang).toLowerCase().startsWith('ko') ? 'ko' : 'en';
     }
 
     function t(key) {
@@ -437,7 +425,7 @@
             }
         });
     } else {
-        // Default sample row if empty
-        createRow('PL4cUxeGkcC9gcuWY256Z971jXlLo7gN4s', '웹 개발 강좌 시리즈', 'general');
+        // 빈 설정은 실제 샘플 ID를 저장하지 않고 입력용 빈 행만 표시한다.
+        createRow('', '', 'general');
     }
 })();

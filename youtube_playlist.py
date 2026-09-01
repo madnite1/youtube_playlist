@@ -203,7 +203,7 @@ class YouTubePlaylistMetadataProvider(BaseMetadataProvider):
         "title": "Youtube",
         "icon": "fa-brands fa-youtube",
         "order": 85,
-        "sessions": "all"
+        "sessions": ["general", "adult"]
     }
 
     # 업데이트 매니페스트.
@@ -350,6 +350,11 @@ class YouTubePlaylistMetadataProvider(BaseMetadataProvider):
         if current_db not in ("general", "adult"):
             current_db = "general"
 
+        try:
+            limit = max(1, min(int(limit), 1000))
+        except (TypeError, ValueError):
+            limit = 50
+
         refresh_series_id = ""
         try:
             from flask import request
@@ -407,16 +412,29 @@ class YouTubePlaylistMetadataProvider(BaseMetadataProvider):
                     save_to_sqlite(series_info, target_db)
                     series_data.append(series_info)
 
+        limited_series = series_data[:limit]
+
         return {
             "success": True,
             "category": "Youtube",
             "db_type": current_db,
             "total_series": len(series_data),
-            "series": series_data,
+            "items": limited_series,
+            "series": limited_series,
             "config": {
+                "auto_play_enabled": self._is_auto_play_enabled(current_db),
                 "mini_player_enabled": self._is_mini_player_enabled(current_db)
             }
         }
+
+    def _is_auto_play_enabled(self, db_type):
+        """영상 선택 시 자동 재생 설정 여부 (AUTO_PLAY, 기본 True)."""
+        try:
+            cfg = self.get_plugin_config(db_type, default={}) or {}
+            val = str(cfg.get("AUTO_PLAY", "true")).strip().lower()
+            return val not in ("0", "false", "no", "off", "")
+        except Exception:
+            return True
 
     def _is_mini_player_enabled(self, db_type):
         """미니 플레이어 사용 설정 여부 (MINI_PLAYER_ENABLED, 기본 True)"""

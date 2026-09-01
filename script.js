@@ -15,6 +15,7 @@
     // 미니 플레이어 사용 설정 — 뷰어 페이지에는 config가 주입되지 않으므로
     // 설정 페이지에서만 data-plugin-config를 읽어 캐시로 보존. 없으면 기본 True.
     let miniPlayerEnabled = true;
+    let autoPlayEnabled = true;
 
     // Video list filter state
     let videoSearchQuery = '';
@@ -92,20 +93,8 @@
     };
 
     function getLang() {
-        let lang = '';
-        if (window.i18n && window.i18n.currentLang) {
-            lang = window.i18n.currentLang;
-        } else if (localStorage.getItem('bookoasis_lang')) {
-            lang = localStorage.getItem('bookoasis_lang');
-        } else if (document.cookie.includes('bookoasis_lang=')) {
-            const m = document.cookie.match(/bookoasis_lang=([^;]+)/);
-            if (m) lang = m[1];
-        } else if (document.documentElement.lang) {
-            lang = document.documentElement.lang;
-        } else if (navigator.language) {
-            lang = navigator.language;
-        }
-        return (lang || 'en').toLowerCase().startsWith('ko') ? 'ko' : 'en';
+        const lang = document.documentElement.lang || navigator.language || 'en';
+        return String(lang).toLowerCase().startsWith('ko') ? 'ko' : 'en';
     }
 
     function t(key, vars = {}) {
@@ -183,27 +172,33 @@
 
 
 
-    // Detect active library type ('general' vs 'adult')
+    // BookOasis가 공개한 플러그인 세션 계약만 사용한다.
     function getActiveDbType() {
-        if (window.currentLibraryType) {
-            return window.currentLibraryType;
+        try {
+            const session = window.BookOasisPlugin?.getSession?.();
+            return session?.libraryType === 'adult' ? 'adult' : 'general';
+        } catch (e) {
+            console.warn('[YouTubePlaylistPlugin] Session API unavailable, using general:', e);
+            return 'general';
         }
-        if (window.state && window.state.currentLibraryType) {
-            return window.state.currentLibraryType;
+    }
+
+    function getCachedImageUrl(url) {
+        if (!url) return '';
+        try {
+            return window.BookOasisPlugin?.getCachedImageUrl?.(url) || url;
+        } catch (e) {
+            return url;
         }
-        const activeMenu = document.querySelector('.sidebar .menu-item.active, nav .menu-item.active');
-        if (activeMenu && activeMenu.dataset && activeMenu.dataset.type) {
-            const t = activeMenu.dataset.type;
-            if (t === 'adult' || t === 'general') return t;
+    }
+
+    function setPlayerVideo(player, videoId) {
+        if (!player || !videoId) return;
+        if (autoPlayEnabled && typeof player.loadVideoById === 'function') {
+            player.loadVideoById(videoId);
+        } else if (typeof player.cueVideoById === 'function') {
+            player.cueVideoById(videoId);
         }
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('type')) {
-            return urlParams.get('type');
-        }
-        if (localStorage.getItem('currentLibraryType')) {
-            return localStorage.getItem('currentLibraryType');
-        }
-        return 'general';
     }
 
     // Is Mobile Device View
@@ -232,12 +227,17 @@
             if (json.success) {
                 pluginData = json.data || json;
                 lastLoadedDbType = dbType;
-                // 미니 플레이어 사용 설정 동기화 (서버 config 우선, 없으면 유지)
-                if (json.config && typeof json.config.mini_player_enabled === 'boolean') {
-                    miniPlayerEnabled = json.config.mini_player_enabled;
-                    console.log(`[YouTubePlaylistPlugin] Mini player enabled: ${miniPlayerEnabled}`);
+
+                const runtimeConfig = pluginData.config || json.config || {};
+                if (typeof runtimeConfig.auto_play_enabled === 'boolean') {
+                    autoPlayEnabled = runtimeConfig.auto_play_enabled;
                 }
-                renderSeriesList(pluginData.series || []);
+                if (typeof runtimeConfig.mini_player_enabled === 'boolean') {
+                    miniPlayerEnabled = runtimeConfig.mini_player_enabled;
+                }
+                console.log(`[YouTubePlaylistPlugin] Runtime config: autoplay=${autoPlayEnabled}, mini=${miniPlayerEnabled}`);
+
+                renderSeriesList(pluginData.series || pluginData.items || []);
             } else {
                 showEmpty(true);
             }
@@ -265,18 +265,19 @@
             const resp = await fetch(`/api/media/dashboard/widgets/youtube_playlist/data?type=${encodeURIComponent(dbType)}&refresh_series=${encodeURIComponent(seriesId)}`);
             const json = await resp.json();
 
-            if (json.success && json.data) {
-                pluginData = json.data;
-                const updatedSeries = (pluginData.series || []).find(s => s.id === seriesId);
+            if (json.success) {
+                pluginData = json.data || json;
+                const seriesList = pluginData.series || pluginData.items || [];
+                const updatedSeries = seriesList.find(s => s.id === seriesId);
 
                 if (updatedSeries && currentSeries && currentSeries.id === seriesId) {
                     currentSeries = updatedSeries;
                     bannerTitle.textContent = updatedSeries.title;
-                    bannerCover.src = updatedSeries.cover;
-                    bannerMeta.textContent = `${updatedSeries.item_count}개 영상 목록`;
+                    bannerCover.src = getCachedImageUrl(updatedSeries.cover);
+                    bannerMeta.textContent = t('videosCountBadge', { n: updatedSeries.item_count });
                     renderVideosList();
                 } else {
-                    renderSeriesList(pluginData.series || []);
+                    renderSeriesList(seriesList);
                 }
             }
         } catch (err) {
@@ -322,7 +323,7 @@
             card.className = 'book-card';
             card.innerHTML = `
                 <div class="book-card-cover">
-                    <img src="${escapeHtml(series.cover)}" alt="${escapeHtml(series.title)}" loading="lazy">
+                    <img src="${escapeHtml(getCachedImageUrl(series.cover))}" alt="${escapeHtml(series.title)}" loading="lazy">
                     <div class="yt-card-play-overlay">
                         <div class="yt-card-play-icon"><i class="fa-solid fa-play"></i></div>
                     </div>
@@ -356,7 +357,7 @@
         currentSeries = series;
         currentSeriesTitle.textContent = series.title;
         bannerTitle.textContent = series.title;
-        bannerCover.src = series.cover;
+        bannerCover.src = getCachedImageUrl(series.cover);
         bannerMeta.textContent = t('videosCountBadge', { n: series.item_count });
 
         closeAllPlayers();
@@ -437,7 +438,7 @@
                 : '';
             card.innerHTML = `
                 <div class="book-card-cover">
-                    <img src="${escapeHtml(v.thumbnail)}" alt="${escapeHtml(v.title)}" loading="lazy">
+                    <img src="${escapeHtml(getCachedImageUrl(v.thumbnail))}" alt="${escapeHtml(v.title)}" loading="lazy">
                     <div class="yt-card-play-overlay">
                         <div class="yt-card-play-icon"><i class="fa-solid fa-play"></i></div>
                     </div>
@@ -483,8 +484,7 @@
             miniIndex = index;
             if (miniTitleEl) miniTitleEl.textContent = video.title || '';
             if (miniPlayer) {
-                miniPlayer.loadVideoById(video.id);
-                miniPlayer.playVideo();
+                setPlayerVideo(miniPlayer, video.id);
             }
             return;
         }
@@ -523,7 +523,7 @@
                 width: '100%',
                 height: '100%',
                 videoId: video.id,
-                playerVars: { autoplay: 1, rel: 0 },
+                playerVars: { autoplay: autoPlayEnabled ? 1 : 0, rel: 0 },
                 events: {
                     onStateChange: function (event) {
                         // 종료(0) 시 다음 영상 자동 재생
@@ -603,7 +603,7 @@
 
             inlinePlayerContainer.style.display = 'block';
             if (inlinePlayer && video.id) {
-                inlinePlayer.loadVideoById(video.id);
+                setPlayerVideo(inlinePlayer, video.id);
             }
 
             inlinePrevBtn.disabled = index <= 0;
@@ -631,7 +631,7 @@
 
             // 같은 플레이어 인스턴스에서 영상 전환 (src 교체 없음)
             if (modalPlayer && video.id) {
-                modalPlayer.loadVideoById(video.id);
+                setPlayerVideo(modalPlayer, video.id);
             }
 
             prevVideoBtn.disabled = index <= 0;
@@ -719,7 +719,7 @@
                 height: '100%',
                 videoId: '',
                 playerVars: {
-                    autoplay: 1,
+                    autoplay: autoPlayEnabled ? 1 : 0,
                     rel: 0
                 },
                 events: {
@@ -744,7 +744,7 @@
                 height: '100%',
                 videoId: '',
                 playerVars: {
-                    autoplay: 1,
+                    autoplay: autoPlayEnabled ? 1 : 0,
                     rel: 0
                 },
                 events: {
@@ -794,19 +794,15 @@
         }
     }
 
-    // Safe Library Toggle Listener (No loops, dbType check only)
-    function attachSafeListeners() {
-        const toggleButtons = document.querySelectorAll('#library-type-toggle-group .btn-toggle');
-        toggleButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                setTimeout(() => {
-                    const currentDb = getActiveDbType();
-                    if (currentDb !== lastLoadedDbType) {
-                        console.log(`[YouTubePlaylistPlugin] Library switched to ${currentDb}, refetching...`);
-                        loadData(true);
-                    }
-                }, 150);
-            });
+    // BookOasis 공개 세션 변경 이벤트만 구독한다.
+    function attachSessionListener() {
+        window.addEventListener('bookoasis:session-change', (event) => {
+            const libraryType = event.detail?.libraryType;
+            if (libraryType !== 'general' && libraryType !== 'adult') return;
+            if (libraryType !== lastLoadedDbType) {
+                console.log(`[YouTubePlaylistPlugin] Session switched to ${libraryType}, refetching...`);
+                loadData(true);
+            }
         });
     }
 
@@ -977,14 +973,6 @@
         });
     }
 
-    // Hook up BookOasis global library search input as well
-    document.addEventListener('input', (e) => {
-        const target = e.target;
-        if (target && (target.id === 'library-search' || (target.matches && target.matches('[data-role="library-search-input"]')))) {
-            performSearch(target.value);
-        }
-    }, true);
-
     // Theme Observer
     const themeObserver = new MutationObserver(() => {
         const activeTheme = document.documentElement.getAttribute('data-app-theme') || 'purple';
@@ -994,6 +982,6 @@
 
     // Initial Load
     loadData(true);
-    attachSafeListeners();
+    attachSessionListener();
     loadYouTubeIframeApi();
 })();

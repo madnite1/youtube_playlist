@@ -2,6 +2,12 @@
 
 [BookOasis](https://github.com/leeyj/BookOasis_stable) 미디어 서버에서 유튜브 **공개 및 일부 공개(Unlisted) 플레이리스트**를 등록하여 라이브러리의 `Youtube` 카테고리 메뉴에서 YouTube 영상 스트리밍을 제공하는 **1등 시민(First-class Citizen) 카테고리 레벨 플러그인**입니다.
 
+## 📌 v1.0.13 — BookOasis 카드 이미지 표시 호환성 수정
+
+- BookOasis 2.5.2의 공통 `.book-card-cover img`가 `opacity: 0`으로 시작하고 코어 `ui.js`의 `.is-loaded` 처리 후 표시되는 규칙과 플러그인 자체 카드 DOM이 충돌하던 문제 수정
+- Youtube 플러그인 카드 범위에서만 `opacity: 1`을 적용해 플레이리스트/에피소드 썸네일을 정상 표시
+- 상세 배너 및 YouTube 원본 썸네일 URL 동작은 그대로 유지하며 BookOasis 코어는 수정하지 않음
+
 ## 📌 v1.0.12 — 썸네일 표시 호환성 수정
 
 - BookOasis 2.5.2의 `getCachedImageUrl()` 경로가 일부 환경에서 WebP 파일을 `image/png` MIME으로 반환하고 `nosniff` 보안 헤더와 충돌해 썸네일이 표시되지 않는 문제를 우회
@@ -55,7 +61,7 @@ plugins/metadata/youtube_playlist/
   ├── __init__.py                    # Python 모듈 패키지 (YouTubePlaylistMetadataProvider export)
   ├── youtube_playlist.py            # 메인 파이썬 모듈 (Dual-DB Sync, SQLite WAL 캐시, Web/RSS Hybrid 파서)
   ├── youtube_playlist_cache.db      # SQLite 로컬 캐시 DB (자동 생성, .gitignore 처리)
-  ├── VERSION                        # 버전 관리 파일: {"plugin version": "1.0.12"}
+  ├── VERSION                        # 버전 관리 파일: {"plugin version": "1.0.13"}
   ├── index.html                     # 라이브러리 Youtube 카테고리 풀페이지 HTML (i18n 지원)
   ├── style.css                      # 풀페이지 CSS (16:9 썸네일, Sticky/Modal 플레이어, 테마 연동)
   ├── script.js                      # 풀페이지 JS (다중 필드 검색, 개별 새로고침, 듀얼 플레이어, i18n)

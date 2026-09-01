@@ -183,13 +183,11 @@
         }
     }
 
+    // BookOasis 2.5.2의 외부 이미지 캐시 라우트는 현재 WebP를 image/png로 응답하면서
+    // nosniff 헤더를 함께 보내 일부 브라우저에서 썸네일이 깨진다.
+    // 코어가 수정될 때까지 YouTube 원본 썸네일 URL을 그대로 사용한다.
     function getCachedImageUrl(url) {
-        if (!url) return '';
-        try {
-            return window.BookOasisPlugin?.getCachedImageUrl?.(url) || url;
-        } catch (e) {
-            return url;
-        }
+        return url || '';
     }
 
     function setPlayerVideo(player, videoId) {

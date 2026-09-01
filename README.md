@@ -2,12 +2,18 @@
 
 [BookOasis](https://github.com/leeyj/BookOasis_stable) 미디어 서버에서 유튜브 **공개 및 일부 공개(Unlisted) 플레이리스트**를 등록하여 라이브러리의 `Youtube` 카테고리 메뉴에서 YouTube 영상 스트리밍을 제공하는 **1등 시민(First-class Citizen) 카테고리 레벨 플러그인**입니다.
 
+## 📌 v1.0.12 — 썸네일 표시 호환성 수정
+
+- BookOasis 2.5.2의 `getCachedImageUrl()` 경로가 일부 환경에서 WebP 파일을 `image/png` MIME으로 반환하고 `nosniff` 보안 헤더와 충돌해 썸네일이 표시되지 않는 문제를 우회
+- 플레이리스트/영상 썸네일을 기존 YouTube CDN 원본 URL로 되돌려 Firefox 등에서 정상 표시
+- BookOasis 코어는 수정하지 않으며, 향후 코어 이미지 캐시 응답의 MIME 호환성이 해결되면 다시 적용 가능
+
 ## 📌 v1.0.11 — BookOasis v2.5.x 호환성 정리
 
 - `window.BookOasisPlugin.getSession()` 및 `bookoasis:session-change` 공식 계약 사용
 - `window.currentLibraryType`, `window.state`, 코어 DOM selector 등 내부 구현 의존 제거
 - Youtube 카테고리 노출 세션을 `general` / `adult`로 명확히 제한
-- `window.BookOasisPlugin.getCachedImageUrl()`로 플레이리스트/영상 썸네일 로컬 WebP 캐시 지원
+- `window.BookOasisPlugin.getCachedImageUrl()` 기반 로컬 WebP 캐시를 도입했으나, 1.0.12에서 BookOasis 2.5.2 MIME 호환성 문제로 임시 비활성화
 - `AUTO_PLAY` 설정을 YouTube IFrame 플레이어의 실제 재생 방식에 반영
 - `get_dashboard_data()`의 `limit` 준수 및 공통 `items` 계약 지원 (`series` 하위 호환 유지)
 - 빈 설정 화면에서 샘플 플레이리스트가 실제 설정값으로 저장될 수 있던 문제 수정
@@ -49,7 +55,7 @@ plugins/metadata/youtube_playlist/
   ├── __init__.py                    # Python 모듈 패키지 (YouTubePlaylistMetadataProvider export)
   ├── youtube_playlist.py            # 메인 파이썬 모듈 (Dual-DB Sync, SQLite WAL 캐시, Web/RSS Hybrid 파서)
   ├── youtube_playlist_cache.db      # SQLite 로컬 캐시 DB (자동 생성, .gitignore 처리)
-  ├── VERSION                        # 버전 관리 파일: {"plugin version": "1.0.11"}
+  ├── VERSION                        # 버전 관리 파일: {"plugin version": "1.0.12"}
   ├── index.html                     # 라이브러리 Youtube 카테고리 풀페이지 HTML (i18n 지원)
   ├── style.css                      # 풀페이지 CSS (16:9 썸네일, Sticky/Modal 플레이어, 테마 연동)
   ├── script.js                      # 풀페이지 JS (다중 필드 검색, 개별 새로고침, 듀얼 플레이어, i18n)

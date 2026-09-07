@@ -172,30 +172,26 @@ class YouTubePlaylistMetadataProvider(BaseMetadataProvider):
             "label": "등록된 플레이리스트 목록 (JSON)",
             "type": "text",
             "default": "[]",
-            "required": False,
-            "description": "등록된 플레이리스트 ID/URL 목록 JSON 데이터 (공개 / 일부 공개 플레이리스트 지원)"
+            "required": False
         },
         {
             "key": "UPDATE_INTERVAL_HOURS",
             "label": "백그라운드 스캔 & DB 캐시 갱신 주기 (시간)",
             "type": "text",
             "default": "6",
-            "required": False,
-            "description": "지정한 시간 간격(기본: 6시간)으로 백그라운드 스캔이 실행되며, 카테고리 진입 시 SQLite DB에서 0.01초 만에 로딩됩니다."
+            "required": False
         },
         {
             "key": "AUTO_PLAY",
             "label": "영상 클릭 시 자동 재생",
             "type": "checkbox",
-            "default": True,
-            "description": "영상 선택 시 모달 플레이어에서 자동 재생 여부"
+            "default": True
         },
         {
             "key": "MINI_PLAYER_ENABLED",
             "label": "미니 플레이어 사용",
             "type": "checkbox",
-            "default": True,
-            "description": "설정 시 모달 플레이어에 '미니 플레이어로 보기' 버튼이 표시되어 별도 플로팅 창으로 영상을 재생할 수 있습니다. 해제 시 미니 플레이어 버튼과 동작이 모두 비활성화됩니다."
+            "default": True
         }
     ]
 
